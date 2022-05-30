@@ -5,31 +5,8 @@ import api as papi
 import isbnlib
 import argparse
 
-def inventory(api):
-    while True:
-        try:
-            raw_isbn = input('isbn: ')
-        except:
-            print()
-            break
-        isbn = isbnlib.clean(raw_isbn)
-        book = api.book_by_isbn(isbn)
-        if book:
-            print(f"already scanned '{book.title}'")
-            continue
-
-        if isbnlib.notisbn(isbn):
-            print("invalid isbn")
-            continue
-        meta = isbnlib.meta(isbn)
-        title = meta['Title']
-        desc = isbnlib.desc(isbn)
-        book_id = api.book_create(isbn=isbn, title=title, description=desc)
-        print(f"created '{title}' with id {book_id}")
-
 def link(api):
-    container_code = input('container code: ')
-    container_code = container_code.strip()
+    container_code = input('container code: ').strip()
     location = api.location_by_barcode(container_code)
     if not location:
         location = models.LocationModel()
@@ -63,21 +40,33 @@ def link(api):
             book.location = location
             api.book_update(book)
             print(f"linked book '{book.title}'")
+def findloc(api):
+    book_title = input('book title: ').strip()
+    if '%' not in book_title:
+        book_title = f"%{book_title}%"
+    location = api.find_container_by_book(book_title)
+    if location:
+        if location.description:
+            print(f"book in {location.barcode} - {location.description}")
+        else:
+            print(f"book in {location.barcode}")
+    else:
+        print("book not found")
 
 def init(api):
     api.create_db()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='ADSF book tracker thing')
-    parser.add_argument('mode', help='the mode to run the tool in', choices=['init', 'inventory', 'report', 'link'])
+    parser.add_argument('mode', help='the mode to run the tool in', choices=['init', 'link', 'findloc'])
     args = parser.parse_args()
 
     db = pdb.DB()
     api = papi.Api(db)
 
-    if args.mode == 'inventory':
-        inventory(api)
-    elif args.mode == 'init':
+    if args.mode == 'init':
         init(api)
     elif args.mode == 'link':
         link(api)
+    elif args.mode == 'findloc':
+        findloc(api)

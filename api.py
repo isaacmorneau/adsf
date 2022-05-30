@@ -33,6 +33,11 @@ class Api:
             self.session.commit()
         return book.id
 
+    def find_container_by_book(self, title):
+        book = self.session.query(models.BookModel).where(models.BookModel.title.ilike(title)).first()
+        if not book:
+            return None
+        return book.location
 
     def location_by_barcode(self, barcode):
         res = self.session.query(models.LocationModel).where(models.LocationModel.barcode == barcode).first()
@@ -44,4 +49,4 @@ class Api:
         res = self.session.add(location)
         if commit:
             self.session.commit()
-        return res.inserted_primary_key[0]
+        return location.id
