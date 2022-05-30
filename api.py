@@ -9,19 +9,39 @@ class Api:
         self.engine = self.db.engine
         self.session = db.session()
 
+    def create_db(self):
+        models.Base.metadata.create_all(self.engine)
+
     def commit(self):
         self.session.commit()
 
     def book_by_isbn(self, isbn):
-        sel = models.book.select().where(models.book.c.isbn == isbn)
-        res = self.session.execute(sel).first()
+        res = self.session.query(models.BookModel).where(models.BookModel.isbn == isbn).first()
         if res:
             return res
         return None
 
-    def book_create(self, commit=True, **properties):
-        ins = models.book.insert().values(**properties)
-        res = self.session.execute(ins)
+    def book_create(self, book, commit=True):
+        res = self.session.add(book)
+        if commit:
+            self.session.commit()
+        return book.id
+
+    def book_update(self, book, commit=True):
+        res = self.session.add(book)
+        if commit:
+            self.session.commit()
+        return book.id
+
+
+    def location_by_barcode(self, barcode):
+        res = self.session.query(models.LocationModel).where(models.LocationModel.barcode == barcode).first()
+        if res:
+            return res
+        return None
+
+    def location_create(self, location, commit=True):
+        res = self.session.add(location)
         if commit:
             self.session.commit()
         return res.inserted_primary_key[0]

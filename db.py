@@ -8,11 +8,8 @@ class DB:
         self.engine = create_engine(
             f"sqlite:///adsf.db", echo=echo
         )
-        self.metadata = models.metadata
 
     def session(self):
         Session = sessionmaker(bind=self.engine)
         return Session()
 
-    def create_db(self):
-        self.metadata.create_all(self.engine)
